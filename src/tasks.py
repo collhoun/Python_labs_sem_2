@@ -83,6 +83,7 @@ class GeneratorTaskSource:
     """
     класс, описывающий генерацию задач
     """
+    _rnd = random.Random(42)
 
     def __init__(self) -> None:
         pass
@@ -94,7 +95,7 @@ class GeneratorTaskSource:
         Returns:
             list[Task]: список задач
         """
-        return [Task(random.randint(1, 100), {"action": random.choice(POSSIBBLE_EVENTS), "name": random.choice(POSSIBBLE_NAMES), "info": random.choice(POSSIBBLE_DATA)}) for _ in range(30)]
+        return [Task(self._rnd.randint(1, 100), {"action": self._rnd.choice(POSSIBBLE_EVENTS), "name": self._rnd.choice(POSSIBBLE_NAMES), "info": self._rnd.choice(POSSIBBLE_DATA)}) for _ in range(10)]
 
 
 class ApiTaskSource:
@@ -116,5 +117,5 @@ class ApiTaskSource:
 
 
 if __name__ == '__main__':
-    obj = TextTaskSource('tasks_examples/task_example.txt')
+    obj = GeneratorTaskSource()
     print(obj.get_tasks())
