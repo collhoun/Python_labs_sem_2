@@ -32,7 +32,6 @@ class TextTaskSource:
     """
 
     def __init__(self, filename: str) -> None:
-        self._filename: str = ''
         self.filename = filename
 
     @property
@@ -41,13 +40,27 @@ class TextTaskSource:
 
     @filename.setter
     def filename(self, value: str) -> None:
+        self._validate_txt_filename(value)
+        self._filename = value
+
+    @staticmethod
+    def _validate_txt_filename(value: str) -> None:
+        """
+        функция-валидатор имени текстового файла
+        Args:
+            value (str): имя файла
+
+        Raises:
+            TypeError: ошибка, если имя файла не строка
+            ValueError: ошибка, если имя файла пустое или расширение не .txt
+            ValueError: _description_
+        """
         if not isinstance(value, str):
             raise TypeError("Имя файла должно быть str")
         if not value:
             raise ValueError("Имя файла не должно быть пустым")
         if not value.lower().endswith('.txt'):
             raise ValueError("Расширение файла должно быть текстовым")
-        self._filename = value
 
     def get_tasks(self) -> list[Task]:
         """
@@ -103,5 +116,5 @@ class ApiTaskSource:
 
 
 if __name__ == '__main__':
-    obj = ApiTaskSource()
+    obj = TextTaskSource('tasks_examples/task_example.txt')
     print(obj.get_tasks())
