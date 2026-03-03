@@ -1,4 +1,4 @@
-from typing import Protocol, Any
+from typing import Protocol, Any, runtime_checkable
 from src.constants import POSSIBBLE_EVENTS, POSSIBBLE_DATA, POSSIBBLE_NAMES
 import random
 import os
@@ -17,6 +17,7 @@ class Task:
         return f"{self.__class__.__name__}({self.id},{self.payload})"
 
 
+@runtime_checkable
 class TaskSource(Protocol):
     """
     Протокол, описывающий свойсва вызываемых обьектов
