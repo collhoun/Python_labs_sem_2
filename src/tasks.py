@@ -49,6 +49,15 @@ class TextTaskSource:
         self._filename = value
 
     def get_tasks(self) -> list[Task]:
+        """
+        из входного файла получает таски и возвращает их
+
+        Raises:
+            FileNotFoundError: ошибка, если файл не найден
+
+        Returns:
+            list[Task]: список задач
+        """
         if not os.path.isfile(self.filename):
             raise FileNotFoundError("Файл не найден")
         with open(self._filename, 'r', encoding='utf-8') as file:
@@ -65,6 +74,12 @@ class GeneratorTaskSource:
         pass
 
     def get_tasks(self) -> list[Task]:
+        """
+        случайным образом генерирует задачи из возможных событий
+
+        Returns:
+            list[Task]: список задач
+        """
         return [Task(random.randint(1, 100), {"action": random.choice(POSSIBBLE_EVENTS), "name": random.choice(POSSIBBLE_NAMES), "info": random.choice(POSSIBBLE_DATA)}) for _ in range(30)]
 
 
@@ -77,10 +92,15 @@ class ApiTaskSource:
         pass
 
     def get_tasks(self) -> list[Task]:
-        raise NotImplementedError(
-            "ApiTaskSource.get_tasks is not implemented yet")
+        """
+        Api-заглушка
+
+        Returns:
+            list[Task]: список задач
+        """
+        return [Task(1, 'one'), Task(2, 'two'), Task(3, 'three'), Task(4, 'four'), Task(5, 'five'), Task(6, 'six'), Task(7, 'seven')]
 
 
 if __name__ == '__main__':
-    obj = TextTaskSource('tasks_examples/task_exmaple.txt')
+    obj = ApiTaskSource()
     print(obj.get_tasks())
