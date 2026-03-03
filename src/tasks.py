@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Protocol, Any
 from src.constants import POSSIBBLE_EVENTS, POSSIBBLE_DATA, POSSIBBLE_NAMES
 import random
 
@@ -8,9 +8,9 @@ class Task:
     класс описывающий минимальный набор для описания задачи
     """
 
-    def __init__(self, task_id: int, payload: dict) -> None:
+    def __init__(self, task_id: int, payload: Any) -> None:
         self.id: int = task_id
-        self.payload: dict = payload
+        self.payload: Any = payload
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.id},{self.payload})"
@@ -24,7 +24,7 @@ class TaskSource(Protocol):
     def get_tasks(self) -> list[Task]: ...
 
 
-class JsonTaskSource:
+class TextTaskSource:
     """
     класс, описывающий загрузку задач из json файла
     """
@@ -33,8 +33,9 @@ class JsonTaskSource:
         self.filename: str = filename
 
     def get_tasks(self) -> list[Task]:
-        raise NotImplementedError(
-            "JsonTaskSource.get_tasks is not implemented yet")
+        with open(self.filename, 'r', encoding='utf-8') as file:
+            info = file.read().split('\n')
+            return [Task(int(i.split('.')[0]), i.split('.')[1].strip()) for i in info]
 
 
 class GeneratorTaskSource:
@@ -63,5 +64,5 @@ class ApiTaskSource:
 
 
 if __name__ == '__main__':
-    obj = GeneratorTaskSource()
+    obj = TextTaskSource('tasks_examples/task_exmaple.txt')
     print(obj.get_tasks())
