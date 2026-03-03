@@ -1,6 +1,7 @@
 from typing import Protocol, Any
 from src.constants import POSSIBBLE_EVENTS, POSSIBBLE_DATA, POSSIBBLE_NAMES
 import random
+import os
 
 
 class Task:
@@ -26,16 +27,33 @@ class TaskSource(Protocol):
 
 class TextTaskSource:
     """
-    класс, описывающий загрузку задач из json файла
+    класс, описывающий загрузку задач из txt файла
     """
 
     def __init__(self, filename: str) -> None:
-        self.filename: str = filename
+        self._filename: str = ''
+        self.filename = filename
+
+    @property
+    def filename(self) -> str:
+        return self._filename
+
+    @filename.setter
+    def filename(self, value: str) -> None:
+        if not isinstance(value, str):
+            raise TypeError("Имя файла должно быть str")
+        if not value:
+            raise ValueError("Имя файла не должно быть пустым")
+        if not value.lower().endswith('.txt'):
+            raise ValueError("Расширение файла должно быть текстовым")
+        self._filename = value
 
     def get_tasks(self) -> list[Task]:
-        with open(self.filename, 'r', encoding='utf-8') as file:
+        if not os.path.isfile(self.filename):
+            raise FileNotFoundError("Файл не найден")
+        with open(self._filename, 'r', encoding='utf-8') as file:
             info = file.read().split('\n')
-            return [Task(int(i.split('.')[0]), i.split('.')[1].strip()) for i in info]
+            return [Task(int(i.split('.')[0]), i.split('.')[1].strip()) for i in info if i]
 
 
 class GeneratorTaskSource:
