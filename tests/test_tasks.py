@@ -1,5 +1,5 @@
 from src.tasks import Task, TextTaskSource, ApiTaskSource, GeneratorTaskSource
-from src.constants import POSSIBBLE_DATA, POSSIBBLE_EVENTS, POSSIBBLE_NAMES
+from src.constants import POSSIBBLE_DATA, POSSIBBLE_EVENTS, POSSIBBLE_NAMES, SEED
 import random
 import pytest
 
@@ -61,8 +61,7 @@ def test_api_task_source_2():
 
 
 def test_generator_task_source():
-    seed: int = 42
-    rnd = random.Random(seed)
+    rnd = random.Random(SEED)
     assert GeneratorTaskSource().get_tasks() == [Task(rnd.randint(1, 100), {"action": rnd.choice(
         POSSIBBLE_EVENTS), "name": rnd.choice(POSSIBBLE_NAMES), "info": rnd.choice(POSSIBBLE_DATA)}) for _ in range(10)]
 

@@ -1,5 +1,5 @@
 from typing import Protocol, Any, runtime_checkable
-from src.constants import POSSIBBLE_EVENTS, POSSIBBLE_DATA, POSSIBBLE_NAMES
+from src.constants import POSSIBBLE_EVENTS, POSSIBBLE_DATA, POSSIBBLE_NAMES, SEED
 import random
 import os
 
@@ -89,7 +89,7 @@ class GeneratorTaskSource:
     """
     класс, описывающий генерацию задач
     """
-    _rnd = random.Random(42)
+    _rnd = random.Random(SEED)
 
     def __init__(self) -> None:
         pass
