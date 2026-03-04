@@ -16,6 +16,12 @@ class Task:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.id},{self.payload})"
 
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Task):
+            raise TypeError(
+                f"Невозможно сравнить {type(Task)} и {type(other)}")
+        return self.id == other.id and self.payload == other.payload
+
 
 @runtime_checkable
 class TaskSource(Protocol):
@@ -117,5 +123,5 @@ class ApiTaskSource:
 
 
 if __name__ == '__main__':
-    obj = GeneratorTaskSource()
+    obj = ApiTaskSource()
     print(obj.get_tasks())
