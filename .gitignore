@@ -2,6 +2,10 @@
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
+# мои файлы
+паф.md
+План курса extended.pdf
+
 # User-specific stuff
 .ruff_cache
 .idea/
@@ -13,7 +17,6 @@
 
 # AWS User-specific
 .idea/**/aws.xml
-паф.md
 # Generated files
 .idea/**/contentModel.xml
 
