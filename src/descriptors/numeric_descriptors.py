@@ -8,7 +8,7 @@ class PositiveInteger:
     """
 
     def __set_name__(self, owner, name) -> None:
-        self.name = '_' + name
+        self.name = name
 
     def __get__(self, instance, owner) -> Union['PositiveInteger', int]:
         if instance is None:

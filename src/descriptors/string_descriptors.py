@@ -52,5 +52,6 @@ class StatusDescriptor(StringDescriptor):
         if not isinstance(value, str):
             raise TypeError(f"Value should be str not {type(value).__name__}")
         if value not in cls.POSSIBLE_STATUSES:
+            statuses: str = ", ".join(cls.POSSIBLE_STATUSES)
             raise InvalidStatusError(
-                f"Status can be: 'ожидание', 'в работе', 'выполнено', а не {value}")
+                f"Status can be: {statuses}, а не {value}")
