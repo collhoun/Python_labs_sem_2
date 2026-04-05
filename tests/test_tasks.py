@@ -1,7 +1,7 @@
 from src.tasks import Task, TextTaskSource, ApiTaskSource, GeneratorTaskSource
 from contextlib import nullcontext as does_not_raise
-from src.errors.numeric_error import NotBinaryError, PriorityValueError
-from src.errors.string_error import InvalidStatusError
+from src.custom_exceptions.numeric_exceptions import NotBinaryError, PriorityValueError
+from src.custom_exceptions.string_exceptions import InvalidStatusError
 from datetime import datetime
 import pytest
 

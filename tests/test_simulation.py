@@ -9,7 +9,7 @@ class TestSimulation:
     @pytest.mark.parametrize(
         "task_source, expectation",
         [
-            (TextTaskSource("tasks_examples/task_example.txt"), does_not_raise()),
+            (TextTaskSource("../tasks_examples/task_example.txt"), does_not_raise()),
             (ApiTaskSource(), does_not_raise()),
             (GeneratorTaskSource(), does_not_raise()),
             (1, pytest.raises(TypeError)),
