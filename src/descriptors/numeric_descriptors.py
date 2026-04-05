@@ -1,4 +1,4 @@
-from src.errors.numeric_error import NotNaturalNumberError, PriorityValueError, NotBinaryError
+from src.custom_exceptions.numeric_exceptions import NotNaturalNumberError, PriorityValueError, NotBinaryError
 from typing import Union
 
 

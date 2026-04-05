@@ -1,0 +1,2 @@
+class PopFromEmptyQueue(Exception):
+    pass

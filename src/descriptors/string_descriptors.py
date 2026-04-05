@@ -1,5 +1,5 @@
 from typing import Union
-from src.errors.string_error import InvalidStatusError
+from src.custom_exceptions.string_exceptions import InvalidStatusError
 
 
 class StringDescriptor:
