@@ -1,82 +1,95 @@
 from logging import getLogger, basicConfig, DEBUG
-from src.tasks import Task, ApiTaskSource, TextTaskSource, GeneratorTaskSource
+from src.tasks import ApiTaskSource, TextTaskSource, GeneratorTaskSource
+from src.contracts.task import Task
 logger = getLogger()
 format = '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
 basicConfig(filename='shell.log', encoding='utf-8',
             level=DEBUG, format=format, filemode='w')
 
 
+def display_menu() -> None:
+    """Выводит главное меню"""
+    print("\n" + "=" * 40)
+    print("       TASK SYSTEM INTERACTIVE DEMO")
+    print("=" * 40)
+    print("1. Generate tasks from API source")
+    print("2. Generate tasks from random generator")
+    print("3. Generate tasks from text file")
+    print("4. View all collected tasks")
+    print("5. Exit")
+    print("=" * 40)
+
+
+def display_tasks(tasks: list[Task]) -> None:
+    """Выводит список задач"""
+    if not tasks:
+        print("\nNo tasks collected yet.")
+        return
+    print(f"\n{'ID':<20} {'Payload':<40} {'Priority':<10} {'Status':<10}")
+    print("-" * 80)
+    for task in tasks:
+        print(f"{task.id:<20} {task.payload:<40} {task.priority:<10} {task.status:<10}")
+
+
 def main() -> None:
-    current_task: Task | None = None
-    tasks_list: list[Task] = []
-    command: int = 0
+    """Главная функция с интерактивным меню"""
+    collected_tasks: list[Task] = []
+    sources = {
+        'api': ApiTaskSource,
+        'generator': GeneratorTaskSource,
+        'text': None
+    }
 
-    while command != 7:
-        print("\nВыберите действие:\n1 Создать задачу\n2 Добавить только что созданную задачу в список задачу")
-        print("3 Вывести список задач")
-        print("4 Получить задачи через API")
-        print("5 Получить задачи из файла (tasks_examples/task_example.txt)")
-        print("6 Сгенерировать случайные задачи")
-        print("7 Выйти")
-        try:
-            command = int(input("Введите номер действия: "))
+    print("Welcome to the Task System Interactive Demo!")
+    print("This demo allows you to explore how tasks are created and managed.")
 
-            if command == 1:
-                task_id = int(input("Введите ID задачи: "))
-                payload = input("Введите содержание задачи: ")
-                current_task = Task(task_id, payload)
-                print(f"Создана задача: {current_task}")
+    while True:
+        display_menu()
+        choice = input("Enter your choice (1-5): ").strip()
 
-            elif command == 2:
-                if current_task is None:
-                    print("Ошибка: сначала создайте задачу (опция 1)")
-                else:
-                    tasks_list.append(current_task)
-                    print("Задача добавлена в список")
+        if choice == '1':
+            print("\nGenerating tasks from API source...")
+            tasks = sources['api']().get_tasks()
+            collected_tasks.extend(tasks)
+            print(f"Successfully added {len(tasks)} tasks from API source.")
+            display_tasks(tasks)
 
-            elif command == 3:
-                if not tasks_list:
-                    print("Список задач пуст")
-                else:
-                    print(f"\nВсего задач: {len(tasks_list)}")
-                    for i, task in enumerate(tasks_list, 1):
-                        print(f"  {i}. {task}")
+        elif choice == '2':
+            print("\nGenerating tasks from random generator...")
+            gen = sources['generator']().get_tasks()
+            for i, task in enumerate(gen):
+                collected_tasks.append(task)
+                if i >= 4:
+                    break
+            print(
+                f"Successfully generated {min(5, len(collected_tasks))} random tasks.")
+            display_tasks(
+                collected_tasks[-5:] if len(collected_tasks) >= 5 else collected_tasks)
 
-            elif command == 4:
-                api_source = ApiTaskSource()
-                new_tasks = api_source.get_tasks()
-                tasks_list.extend(new_tasks)
-                print(f"Получено {len(new_tasks)} задач с API")
+        elif choice == '3':
+            filename = "tasks_examples/task_example.txt"
+            print(f"\nLoading tasks from text file: {filename}")
+            try:
+                if sources['text'] is None:
+                    sources['text'] = TextTaskSource(filename)
+                tasks = sources['text'].get_tasks()
+                collected_tasks.extend(tasks)
+                print(f"Successfully loaded {len(tasks)} tasks from file.")
+                display_tasks(tasks)
+            except FileNotFoundError:
+                print(f"Error: File '{filename}' not found.")
+            except Exception as e:
+                print(f"Error loading tasks: {e}")
 
-            elif command == 5:
-                try:
-                    text_source = TextTaskSource(
-                        "tasks_examples/task_example.txt")
-                    new_tasks = text_source.get_tasks()
-                    tasks_list.extend(new_tasks)
-                    print(f"Получено {len(new_tasks)} задач из файла")
-                except FileNotFoundError as e:
-                    print(f"Ошибка: {e}")
+        elif choice == '4':
+            display_tasks(collected_tasks)
 
-            elif command == 6:
-                gen_source = GeneratorTaskSource()
-                new_tasks = gen_source.get_tasks()
-                tasks_list.extend(new_tasks)
-                print(f"Сгенерировано {len(new_tasks)} случайных задач")
+        elif choice == '5':
+            print("\nGoodbye")
+            break
 
-            elif command == 7:
-                print("Выход...")
-                break
-
-            else:
-                print("Ошибка, выберите число от 1 до 7")
-
-        except ValueError:
-            logger.error("Введено некорректное значение")
-            print("Ошибка: введите корректное число")
-        except Exception as e:
-            logger.error(f"Ошибка при выполнении команды: {e}")
-            print(f"Ошибка: {e}")
+        else:
+            print("\nInvalid choice. Please enter a number between 1 and 5.")
 
 
 if __name__ == '__main__':
