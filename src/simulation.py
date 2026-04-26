@@ -1,21 +1,21 @@
-from src.contracts.task_source import TaskSource
-from src.contracts.task import Task
+from logging import getLogger
+from src.contracts.task_handlerable import TaskHandlerable
 
 
-def process_taks(task_source: TaskSource) -> None:
+logger = getLogger(__name__)
+
+
+async def process(worker: TaskHandlerable):
     """
-        функция, которая принимает на вход обьект, который реализует протокол TaskSource и выводит его задачи
+    Асинхронная обработка задач с помощью воркера
 
     Args:
-        task_source (TaskSource): обьект, который реализует протокол TaskSource
-
-    Raises:
-        TypeError: ошибка, если task_source не реализует протокол TaskSource
+        worker (TaskHandlerable): воркер
     """
-    if not isinstance(task_source, TaskSource):
-        raise TypeError("Задача должна быть экземпляром TaskSource")
-    tasks = task_source.get_tasks()
-    if isinstance(tasks, Task):
-        tasks = [tasks]
-    for task in tasks:
-        print(task)
+    logger.info(f"Запуск воркера {worker}")
+    try:
+        await worker.work()
+    except Exception as e:
+        logger.error(f"Ошибка в воркере {worker.worker_id}: {e}")
+        raise
+    logger.info(f"Воркер {worker.worker_id} завершил работу")

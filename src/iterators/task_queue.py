@@ -1,92 +1,102 @@
+import asyncio
+from logging import getLogger
 from src.contracts.task import Task
-from src.descriptors.numeric_descriptors import Priority
-from src.descriptors.string_descriptors import StatusDescriptor
-from collections import deque
-from typing import Generator, Iterable
 from src.custom_exceptions.queue_exceptions import PopFromEmptyQueue
 
 
+logger = getLogger(__name__)
+
+# метка для закрытия очереди
+EVENT_EMPTY_QUEUE = object()
+
+
 class TaskQueue:
-    def __init__(self, tasks: Iterable[Task] | Task) -> None:
-        self._tasks = deque(self.fit(tasks))
+    def __init__(self) -> None:
+        self._tasks: asyncio.PriorityQueue = asyncio.PriorityQueue(
+            maxsize=10_000)
+        self._closed = False
+        self._is_drained = False  # флаг, очередь закрыта и полностью исчерпана
+        self._counter = 0
+        self._close_task = None   # сслыка на фоновую задачу, чтобы её не убил сборщик мусора
 
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._tasks})"
+    def __aiter__(self):
+        return self
 
-    @classmethod
-    def fit(cls, tasks: Iterable[Task] | Task) -> Iterable[Task]:
+    async def __anext__(self):
+        try:
+            return await self.get()
+        except PopFromEmptyQueue:
+            raise StopAsyncIteration
+
+    async def put(self, task: Task):
         """
-            Подготавливает входные данные для инициализации очереди
+        Добавление задачи в очередь
         Args:
-            tasks (list[Task] | Task): Список задач либо единственная задача
+            task (Task): задача
 
-        Returns:
-            list[Task]: список задач
-        """
-        if isinstance(tasks, Task):
-            yield tasks
-            return
-
-        for task in tasks:
-            if not isinstance(task, Task):
-                raise TypeError("Задача должна быть экземпляром Task")
-            yield task
-
-    def __iter__(self):
-        return iter(self._tasks)
-
-    def filter_by_priority(self, priority: int) -> Generator[Task]:
-        """
-        Фильтр задач по приоритету
-        Args:
-            priority (int): приоритет задачи
-
-        Yields:
-            Generator[Task]: задача с заданным приоритетом
-        """
-        Priority.verify_value(priority)
-        for task in self._tasks:
-            if task.priority == priority:
-                yield task
-
-    def filter_by_status(self, status: str) -> Generator[Task]:
-        """
-        Фильтр задач по статусу
-        Args:
-            status (str): статус задачи
-
-        Yields:
-            Generator[Task]: задача с заданным статусом
-        """
-        StatusDescriptor.verify_value(status)
-        for task in self._tasks:
-            if task.status == status:
-                yield task
-
-    def append(self, task: Task) -> None:
-        """
-        Добавляет задачу в очередь
-
-        Args:
-            task (Task): задача для добавления
+        Raises:
+            TypeError: задача не экземпляр Task
+            RuntimeError: очередь закрыта для новых задач
         """
         if not isinstance(task, Task):
+            logger.error("Попытка добавить не Task объект в очередь")
             raise TypeError("Задача должна быть экземпляром Task")
-        self._tasks.append(task)
+        if self._closed:
+            logger.warning("Попытка добавить задачу в закрытую очередь")
+            raise RuntimeError("Очередь закрыта для новых задач")
 
-    def pop_left(self) -> Task:
+        self._counter += 1
+        await self._tasks.put((task.priority, self._counter, task))
+        logger.debug(
+            f"Задача {task.id} добавлена в очередь (приоритет: {task.priority})")
+
+    async def get(self) -> Task:
         """
-        Удаляет первую задачу из очереди
+        Получение задачи из очереди
+
+        Raises:
+            PopFromEmptyQueue: если очередь уже исчерпана, сразу отсекаем вызов
+            PopFromEmptyQueue: если очередь закрыли, и в ней нет даже маркера (например, еще не успел положиться)
+            PopFromEmptyQueue: _description_
 
         Returns:
-            Task: задача из очереди
+            Task: _description_
         """
-        if len(self._tasks) != 0:
-            return self._tasks.popleft()
-        raise PopFromEmptyQueue("Удаление из пустой очереди")
 
-    def __len__(self):
-        return len(self._tasks)
+        if self._is_drained:
+            logger.debug("Попытка извлечь задачу из исчерпанной очереди")
+            raise PopFromEmptyQueue("Очередь закрыта и пуста")
 
-    def is_empty(self):
-        return len(self._tasks) == 0
+        if self._closed and self._tasks.empty():
+            logger.debug("Очередь закрыта и пуста")
+            raise PopFromEmptyQueue("Очередь закрыта и пуста")
+
+        priority, count, task = await self._tasks.get()
+
+        #  мы достали маркер закрытия
+        if task is EVENT_EMPTY_QUEUE:
+            self._is_drained = True  # больше никому ничего не выдаем
+            logger.info("Очередь полностью исчерпана")
+
+            self._tasks.put_nowait((priority, count, task))
+            raise PopFromEmptyQueue("Очередь закрыта и пуста")
+
+        logger.debug(f"Задача {task.id} извлечена из очереди")
+        return task
+
+    def close(self):
+        """
+        Закрытие очереди.
+        """
+        if self._closed:
+            logger.debug("Очередь уже закрыта")
+            return
+
+        self._closed = True
+        logger.info("Очередь закрыта для новых задач")
+
+        async def _put_empty_queue():
+            await self._tasks.put((float('inf'), 0, EVENT_EMPTY_QUEUE))
+
+        # защита от сборщика мусора
+        self._close_task = asyncio.create_task(_put_empty_queue())
