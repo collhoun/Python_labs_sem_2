@@ -57,10 +57,10 @@ class TaskQueue:
         Raises:
             PopFromEmptyQueue: если очередь уже исчерпана, сразу отсекаем вызов
             PopFromEmptyQueue: если очередь закрыли, и в ней нет даже маркера (например, еще не успел положиться)
-            PopFromEmptyQueue: _description_
+            PopFromEmptyQueue: если очередь закрыли
 
         Returns:
-            Task: _description_
+            Task: задача
         """
 
         if self._is_drained:

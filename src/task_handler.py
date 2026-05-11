@@ -18,7 +18,7 @@ class TaskContextHandler:
     async def __aexit__(self, exc_type, exc, tb):
         if exc_type is None:
             # кастомная логика обработки задачи
-            await asyncio.sleep(3)
+            await asyncio.sleep(10)
             self.task.status = "выполнено"
             logger.info(f"Задача {self.task.id} выполнена успешно")
             return False

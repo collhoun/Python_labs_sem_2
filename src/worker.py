@@ -1,6 +1,7 @@
 from logging import getLogger
 from src.iterators.task_queue import TaskQueue
-from src.task_handler import TaskContextHandler
+from typing import Callable, Any
+from src.contracts.task import Task
 
 
 logger = getLogger(__name__)
@@ -9,10 +10,11 @@ logger = getLogger(__name__)
 class Worker:
     worker_id: int = 0
 
-    def __init__(self, task_queue: TaskQueue) -> None:
+    def __init__(self, task_queue: TaskQueue, handler: Callable[[Task], Any]) -> None:
         self.task_queue = task_queue
         self.worker_id = Worker.worker_id
         Worker.worker_id += 1
+        self.handler = handler
 
     async def work(self) -> None:
         """
@@ -22,7 +24,7 @@ class Worker:
             task = await self.task_queue.get()
             logger.info(f"Worker {self.worker_id} начал задачу {task.id}")
 
-            async with TaskContextHandler(task):
+            async with self.handler(task):
                 logger.info(
                     f"Worker {self.worker_id} обрабатывает payload: {task.payload}")
 

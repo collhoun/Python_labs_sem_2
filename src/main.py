@@ -5,6 +5,7 @@ from src.tasks import ApiTaskSource, GeneratorTaskSource
 from src.worker import Worker
 from src.iterators.task_queue import TaskQueue
 from src.simulation import process
+from src.task_handler import TaskContextHandler
 
 
 setup_logging()
@@ -19,7 +20,7 @@ async def main():
     logger.info("=== Демонстрация асинхронного исполнения задач ===")
 
     queue = TaskQueue()
-    workers = [Worker(queue) for _ in range(3)]
+    workers = [Worker(queue, TaskContextHandler) for _ in range(3)]
     logger.info(f"Создано {len(workers)} воркеров")
 
     api_source = ApiTaskSource()
